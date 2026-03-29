@@ -139,7 +139,7 @@ function Dashboard() {
 
         <div className="bg-white p-4 rounded shadow">
           <h3 className="text-gray-500">Inventory Value</h3>
-          <p className="text-2xl font-bold">${totalValue}</p>
+          <p className="text-2xl font-bold">₹{totalValue}</p>
         </div>
 
       </div>
@@ -235,7 +235,7 @@ function Dashboard() {
                 <td className="p-3">{item.itemName}</td>
                 <td className="p-3">{item.category}</td>
                 <td className="p-3">{item.quantity}</td>
-                <td className="p-3">${item.price}</td>
+                <td className="p-3">₹{item.price}</td>
 
                 <td className="p-3 flex gap-3">
 

@@ -18,6 +18,11 @@ app.use(express.json());
 
 connectDB();
 
+app.use(express.static("./frontend/dist"));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
+});
 app.use("/api/auth", authRoutes);
 app.use("/api/items", itemRoutes);
 

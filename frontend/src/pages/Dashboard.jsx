@@ -1,297 +1,248 @@
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useMemo, useState, useCallback } from "react";
 import API from "../services/api";
-
 import InventoryChart from "../components/InventoryChart";
+import Sidebar from "../components/Sidebar";
+import ItemForm from "../components/ItemForm";
+import InventoryList from "../components/InventoryList";
+
+const formatCurrency = (value) =>
+  `Rs ${Number(value).toLocaleString("en-IN", {
+    maximumFractionDigits: 2,
+  })}`;
 
 function Dashboard() {
-
   const [items, setItems] = useState([]);
-  const [search, setSearch] = useState("");
-
-  const [itemName, setItemName] = useState("");
-  const [category, setCategory] = useState("");
-  const [quantity, setQuantity] = useState("");
-  const [price, setPrice] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [editId, setEditId] = useState(null);
-
-  // GET ITEMS
-  const getItems = async () => {
-    try {
-
-      const res = await API.get(`/items?page=${page}&search=${search}`);
-
-      setItems(res.data.items);
-      setTotalPages(res.data.totalPages);
-
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  const [editItemDetails, setEditItemDetails] = useState(null);
 
   useEffect(() => {
-    getItems();
-  }, [page, search]);
-  // ADD OR UPDATE ITEM
-  const handleSubmit = async () => {
-    try {
+    let cancelled = false;
 
-      if (editId) {
-        await API.put(`/items/${editId}`, {
-          itemName,
-          category,
-          quantity,
-          price
+    const getItems = async () => {
+      try {
+        const response = await API.get(
+          `/items?page=${page}&search=${encodeURIComponent(searchQuery)}`
+        );
+
+        if (cancelled) return;
+
+        startTransition(() => {
+          setItems(response.data.items);
+          setTotalPages(response.data.totalPages);
         });
-        setEditId(null);
-      } else {
-        await API.post("/items", {
-          itemName,
-          category,
-          quantity,
-          price
-        });
+      } catch (error) {
+        if (!cancelled) {
+          console.error(error);
+        }
       }
+    };
 
-      setItemName("");
-      setCategory("");
-      setQuantity("");
-      setPrice("");
+    getItems();
 
-      getItems();
+    return () => {
+      cancelled = true;
+    };
+  }, [page, searchQuery]);
 
+  const refreshItems = async () => {
+    try {
+      const response = await API.get(
+        `/items?page=${page}&search=${encodeURIComponent(searchQuery)}`
+      );
+
+      startTransition(() => {
+        setItems(response.data.items);
+        setTotalPages(response.data.totalPages);
+      });
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
-  // DELETE ITEM
+  const handleFormSubmit = async (payload) => {
+    try {
+      if (editItemDetails) {
+        await API.put(`/items/${editItemDetails._id}`, payload);
+      } else {
+        await API.post("/items", payload);
+      }
+      setEditItemDetails(null);
+      refreshItems();
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  };
+
   const deleteItem = async (id) => {
+    if (!window.confirm("Remove this item from inventory?")) return;
+
     try {
       await API.delete(`/items/${id}`);
-      getItems();
+      refreshItems();
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
-  // EDIT ITEM
-  const editItem = (item) => {
-    setEditId(item._id);
-    setItemName(item.itemName);
-    setCategory(item.category);
-    setQuantity(item.quantity);
-    setPrice(item.price);
-  };
+  const handleEdit = useCallback((item) => {
+    setEditItemDetails(item);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
-  // SEARCH
-  const filteredItems = items.filter((item) =>
-    item.itemName.toLowerCase().includes(search.toLowerCase())
-  );
+  const handleSearchChange = useCallback((query) => {
+    startTransition(() => {
+      setPage(1);
+      setSearchQuery(query);
+    });
+  }, []);
 
-  // STATS
-  const totalProducts = items.length;
+  const metrics = useMemo(() => {
+    const totalProducts = items.length;
+    const totalStock = items.reduce((total, item) => total + Number(item.quantity), 0);
+    const totalValue = items.reduce(
+      (total, item) => total + Number(item.quantity) * Number(item.price),
+      0
+    );
+    const lowStockCount = items.filter((item) => Number(item.quantity) < 5).length;
+    const categoriesCount = new Set(items.map((item) => item.category?.trim()).filter(Boolean)).size;
+    const averagePrice = totalProducts ? totalValue / totalProducts : 0;
 
-  const totalStock = items.reduce(
-    (acc, item) => acc + Number(item.quantity),
-    0
-  );
-
-  const totalValue = items.reduce(
-    (acc, item) => acc + item.quantity * item.price,
-    0
-  );
+    return {
+      averagePrice,
+      categoriesCount,
+      lowStockCount,
+      totalProducts,
+      totalStock,
+      totalValue,
+    };
+  }, [items]);
 
   return (
-    <div className="p-8 bg-gray-100 min-h-screen">
-
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold mb-6">
-        Inventory Dashboard
-      </h1>
-        <button 
-          onClick={() => {
+    <div className="page-shell dashboard-page">
+      <div className="dashboard-shell">
+        <Sidebar
+          categoriesCount={metrics.categoriesCount}
+          inventoryValue={formatCurrency(metrics.totalValue)}
+          lowStockCount={metrics.lowStockCount}
+          onLogout={() => {
             localStorage.removeItem("token");
             window.location.href = "/";
           }}
-          className="bg-red-500 text-white px-4 py-2 rounded mb-2.5"
-        >
-          Logout
-        </button>
+          totalProducts={metrics.totalProducts}
+        />
+
+        <main className="dashboard-main">
+          <header className="dashboard-header">
+            <div>
+              <div className="eyebrow">
+                <span className="eyebrow-dot" />
+                Operations dashboard
+              </div>
+              <h1>Inventory at a glance.</h1>
+              <p>
+                A shadcn-inspired control room for products, stock movement, and action-ready insights.
+              </p>
+            </div>
+          </header>
+
+          <section className="stats-grid">
+            <article className="dashboard-stat">
+              <span className="panel-kicker">Products</span>
+              <strong>{metrics.totalProducts}</strong>
+              <span>Visible in the current page results.</span>
+            </article>
+            <article className="dashboard-stat">
+              <span className="panel-kicker">Stock units</span>
+              <strong>{metrics.totalStock}</strong>
+              <span>Total quantity across loaded items.</span>
+            </article>
+            <article className="dashboard-stat">
+              <span className="panel-kicker">Inventory value</span>
+              <strong className="mono">{formatCurrency(metrics.totalValue)}</strong>
+              <span>Estimated worth based on price and quantity.</span>
+            </article>
+            <article className="dashboard-stat">
+              <span className="panel-kicker">Low stock</span>
+              <strong>{metrics.lowStockCount}</strong>
+              <span>Items below the suggested threshold of 5 units.</span>
+            </article>
+          </section>
+
+          <section className="dashboard-grid">
+            <div className="panel-subgrid">
+              <ItemForm
+                editItem={editItemDetails}
+                onSubmit={handleFormSubmit}
+                onCancel={() => setEditItemDetails(null)}
+              />
+
+              <InventoryList
+                items={items}
+                page={page}
+                totalPages={totalPages}
+                setPage={setPage}
+                onEdit={handleEdit}
+                onDelete={deleteItem}
+                lowStockCount={metrics.lowStockCount}
+                onSearchChange={handleSearchChange}
+              />
+            </div>
+
+            <div className="panel-subgrid">
+              <article className="dashboard-panel">
+                <header>
+                  <div>
+                    <span className="panel-kicker">Analytics</span>
+                    <h3>Stock by category</h3>
+                    <p>See where your inventory is concentrated across the current dataset.</p>
+                  </div>
+                </header>
+                <InventoryChart items={items} />
+              </article>
+
+              <article className="dashboard-panel">
+                <header>
+                  <div>
+                    <span className="panel-kicker">Pulse</span>
+                    <h3>Operational notes</h3>
+                    <p>Useful reference metrics for making quick decisions while you work.</p>
+                  </div>
+                </header>
+
+                <div className="mini-stats-grid">
+                  <div className="mini-card">
+                    <span className="panel-kicker">Average item value</span>
+                    <strong className="mono">{formatCurrency(metrics.averagePrice)}</strong>
+                    <p>Average listed value per loaded product.</p>
+                  </div>
+                  <div className="mini-card">
+                    <span className="panel-kicker">Categories</span>
+                    <strong>{metrics.categoriesCount || 0}</strong>
+                    <p>Distinct categories represented right now.</p>
+                  </div>
+                  <div className="mini-card">
+                    <span className="panel-kicker">Search state</span>
+                    <strong>{searchQuery ? "Filtered" : "All items"}</strong>
+                    <p>
+                      {searchQuery
+                        ? `Showing results for "${searchQuery}".`
+                        : "No search filter is active."}
+                    </p>
+                  </div>
+                  <div className="mini-card">
+                    <span className="panel-kicker">Editing mode</span>
+                    <strong>{editItemDetails ? "Active" : "Idle"}</strong>
+                    <p>{editItemDetails ? "Form is prefilled for updates." : "Ready to create a new inventory item."}</p>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </section>
+        </main>
       </div>
-
-
-
-      {/* STATS */}
-
-      <div className="grid grid-cols-3 gap-6 mb-8">
-
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="text-gray-500">Total Products</h3>
-          <p className="text-2xl font-bold">{totalProducts}</p>
-        </div>
-
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="text-gray-500">Total Stock</h3>
-          <p className="text-2xl font-bold">{totalStock}</p>
-        </div>
-
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="text-gray-500">Inventory Value</h3>
-          <p className="text-2xl font-bold">₹{totalValue}</p>
-        </div>
-
-      </div>
-
-      {/* ADD ITEM FORM */}
-
-      <div className="bg-white p-6 rounded shadow mb-8">
-
-        <h2 className="text-xl font-semibold mb-4">
-          {editId ? "Update Item" : "Add Item"}
-        </h2>
-
-        <div className="grid grid-cols-4 gap-4">
-
-          <input
-            className="border p-2 rounded"
-            placeholder="Item Name"
-            value={itemName}
-            onChange={(e) => setItemName(e.target.value)}
-          />
-
-          <input
-            className="border p-2 rounded"
-            placeholder="Category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          />
-
-          <input
-            className="border p-2 rounded"
-            type="number"
-            placeholder="Quantity"
-            value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
-          />
-
-          <input
-            className="border p-2 rounded"
-            type="number"
-            placeholder="Price"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-          />
-
-        </div>
-
-        <button
-          onClick={handleSubmit}
-          className="mt-4 bg-indigo-600 text-white px-4 py-2 rounded"
-        >
-          {editId ? "Update Item" : "Add Item"}
-        </button>
-
-      </div>
-
-      {/* SEARCH */}
-
-      <input
-        className="border p-2 rounded mb-4 w-full"
-        placeholder="Search items..."
-        onChange={(e) => setSearch(e.target.value)}
-      />
-
-      {/* TABLE */}
-
-      <div className="bg-white rounded shadow overflow-hidden">
-
-        <table className="w-full">
-
-          <thead className="bg-gray-200">
-            <tr>
-              <th className="p-3 text-left">Item</th>
-              <th className="p-3 text-left">Category</th>
-              <th className="p-3 text-left">Quantity</th>
-              <th className="p-3 text-left">Price</th>
-              <th className="p-3 text-left">Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-
-            {filteredItems.map((item) => (
-
-              <tr
-                key={item._id}
-                className={
-                  item.quantity < 5
-                    ? "bg-red-100"
-                    : "border-t"
-                }
-              >
-
-                <td className="p-3">{item.itemName}</td>
-                <td className="p-3">{item.category}</td>
-                <td className="p-3">{item.quantity}</td>
-                <td className="p-3">₹{item.price}</td>
-
-                <td className="p-3 flex gap-3">
-
-                  <button
-                    onClick={() => editItem(item)}
-                    className="bg-yellow-500 text-white px-3 py-1 rounded"
-                  >
-                    Edit
-                  </button>
-
-                  <button
-                    onClick={() => deleteItem(item._id)}
-                    className="bg-red-600 text-white px-3 py-1 rounded"
-                  >
-                    Delete
-                  </button>
-
-                </td>
-
-              </tr>
-
-            ))}
-
-          </tbody>
-
-        </table>
-
-      </div>
-
-      <InventoryChart items={items} />
-
-      <div className="flex justify-center gap-4 mt-6">
-
-        <button
-          onClick={() => setPage(page - 1)}
-          disabled={page === 1}
-          className="bg-gray-300 px-3 py-1 rounded"
-        >
-          Previous
-        </button>
-
-        <span className="font-semibold">
-          Page {page} of {totalPages}
-        </span>
-
-        <button
-          onClick={() => setPage(page + 1)}
-          disabled={page === totalPages}
-          className="bg-gray-300 px-3 py-1 rounded"
-        >
-          Next
-        </button>
-
-      </div>
-
-
     </div>
   );
 }

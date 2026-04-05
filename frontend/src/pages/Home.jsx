@@ -1,136 +1,234 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
 
+const features = [
+  {
+    icon: "[]",
+    title: "Elegant command center",
+    description: "Monitor stock, value, and category movement from one polished control room designed for speed.",
+  },
+  {
+    icon: "o",
+    title: "Low-stock visibility",
+    description: "Spot weak inventory positions quickly with clear thresholds, warning states, and smarter prioritization.",
+  },
+  {
+    icon: "#",
+    title: "Fast CRUD workflows",
+    description: "Add, edit, search, and clean up inventory without digging through dense tables or cluttered forms.",
+  },
+  {
+    icon: "~",
+    title: "Analytics-first layout",
+    description: "Understand category health at a glance with lightweight visual summaries built into the experience.",
+  },
+  {
+    icon: "/\\",
+    title: "Secure team access",
+    description: "Authentication keeps dashboards protected so staff can manage stock confidently.",
+  },
+  {
+    icon: "*",
+    title: "Built to feel premium",
+    description: "A shadcn-inspired visual language gives the product depth, hierarchy, and a more modern identity.",
+  },
+];
 
-const Home = () => {
+const inventoryRows = [
+  { name: "Wireless Mouse", status: "Healthy", value: "124 units" },
+  { name: "Office Chair", status: "Low stock", value: "8 units" },
+  { name: "USB-C Dock", status: "Healthy", value: "46 units" },
+];
 
-    const navigate = useNavigate()
+function Home() {
+  const navigate = useNavigate();
+
   return (
-    <div className="min-h-screen bg-gray-50">
-
-      {/* Navbar */}
-      <nav className="bg-white shadow-md">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-
-          <h1 className="text-2xl font-bold text-indigo-600">
-            InventoryPro
-          </h1>
-
-          <div className="space-x-6 flex items-center">
-            <a href="#" className="text-gray-700 hover:text-indigo-600">Home</a>
-            <a href="#" className="text-gray-700 hover:text-indigo-600">Features</a>
-            <a href="#" className="text-gray-700 hover:text-indigo-600">About</a>
-
-            {/* Login Button */}
-            <button onClick={()=>{
-                navigate("/login")
-            }} className="bg-indigo-600 text-white px-5 py-2 rounded-lg hover:bg-indigo-700 transition">
-              Login
-            </button>
+    <div className="page-shell hero-layout">
+      <nav className="topbar glass-panel">
+        <div className="brand">
+          <div className="brand-mark">I</div>
+          <div className="brand-copy">
+            <strong>InventoryPro</strong>
+            <span>Inventory intelligence</span>
           </div>
+        </div>
 
+        <div className="nav-links">
+          <a className="nav-link" href="#features">Features</a>
+          <a className="nav-link" href="#showcase">Showcase</a>
+          <button className="button button-ghost" onClick={() => navigate("/login")} type="button">
+            Sign in
+          </button>
+          <button className="button button-primary" onClick={() => navigate("/register")} type="button">
+            Create account
+          </button>
         </div>
       </nav>
 
+      <main className="container">
+        <section className="hero-grid fade-in">
+          <div>
+            <div className="eyebrow">
+              <span className="eyebrow-dot" />
+              Shadcn-inspired inventory workspace
+            </div>
+            <h1 className="hero-title">
+              <span>Make operations</span>
+              <strong>look as sharp as they run.</strong>
+            </h1>
+            <p className="hero-copy">
+              InventoryPro turns a plain stock tracker into a modern operations surface with clearer hierarchy,
+              richer visual feedback, and a dashboard people actually enjoy using.
+            </p>
 
-      {/* Hero Section */}
-      <section className="text-center py-24 px-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
-        
-        <h2 className="text-5xl font-bold mb-6">
-          Inventory Management System
-        </h2>
+            <div className="hero-actions">
+              <button className="button button-primary" onClick={() => navigate("/register")} type="button">
+                Start free
+              </button>
+              <button className="button button-secondary" onClick={() => navigate("/login")} type="button">
+                Open dashboard
+              </button>
+            </div>
 
-        <p className="text-lg max-w-2xl mx-auto mb-8">
-          Manage products, monitor stock levels, and track your inventory
-          efficiently with a powerful cloud-based system.
-        </p>
+            <div className="hero-metrics">
+              <div className="metric-card">
+                <strong>4.2k</strong>
+                <span>Tracked units</span>
+              </div>
+              <div className="metric-card">
+                <strong>28%</strong>
+                <span>Faster stock lookup</span>
+              </div>
+              <div className="metric-card">
+                <strong>24/7</strong>
+                <span>Inventory visibility</span>
+              </div>
+            </div>
+          </div>
 
-        <div className="space-x-4">
-          <button onClick={()=>{
-                navigate("/register")
-            }} className="bg-white text-indigo-600 font-semibold px-6 py-3 rounded-lg hover:bg-gray-200 transition">
-            Get Started
-          </button>
+          <div className="hero-preview glass-panel">
+            <div className="preview-window">
+              <div className="preview-header">
+                <div className="preview-dots">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+                <div className="status-pill">Live inventory sync</div>
+              </div>
 
-          {/* Login Button */}
-          <button onClick={()=>{
-                navigate("/login")
-            }} className="border border-white px-6 py-3 rounded-lg hover:bg-white hover:text-indigo-600 transition">
-            Login
-          </button>
-        </div>
+              <div className="preview-grid">
+                <div className="preview-stats">
+                  <div className="preview-stat">
+                    <label>Products</label>
+                    <strong>248</strong>
+                  </div>
+                  <div className="preview-stat">
+                    <label>Stock Units</label>
+                    <strong>4.2k</strong>
+                  </div>
+                  <div className="preview-stat">
+                    <label>Value</label>
+                    <strong className="mono">Rs 8.1L</strong>
+                  </div>
+                </div>
 
-      </section>
+                <div className="preview-chart">
+                  <span className="section-label">Category movement</span>
+                  <div className="bar-row">
+                    <span>Electronics</span>
+                    <div className="bar-track"><div className="bar-fill" style={{ width: "88%" }} /></div>
+                    <span className="mono">88</span>
+                  </div>
+                  <div className="bar-row">
+                    <span>Furniture</span>
+                    <div className="bar-track"><div className="bar-fill" style={{ width: "61%" }} /></div>
+                    <span className="mono">61</span>
+                  </div>
+                  <div className="bar-row">
+                    <span>Stationery</span>
+                    <div className="bar-track"><div className="bar-fill" style={{ width: "34%" }} /></div>
+                    <span className="mono">34</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
-
-      {/* Features */}
-      <section className="py-20 px-6 max-w-7xl mx-auto">
-        
-        <h3 className="text-3xl font-bold text-center mb-12">
-          Key Features
-        </h3>
-
-        <div className="grid md:grid-cols-3 gap-8">
-
-          <div className="bg-white shadow-md p-6 rounded-lg">
-            <h4 className="text-xl font-semibold mb-3">
-              📦 Product Management
-            </h4>
-            <p className="text-gray-600">
-              Add, update, and delete products easily while managing detailed product information.
+        <section className="section-block" id="features">
+          <div className="section-heading">
+            <div className="eyebrow">
+              <span className="eyebrow-dot" />
+              Designed with product UI discipline
+            </div>
+            <h2>Stronger hierarchy, cleaner forms, and a dashboard that feels production-ready.</h2>
+            <p>
+              The new direction borrows the compositional feel of shadcn dashboards: elevated cards, muted surfaces,
+              careful spacing, and focused typography instead of generic admin styling.
             </p>
           </div>
 
-          <div className="bg-white shadow-md p-6 rounded-lg">
-            <h4 className="text-xl font-semibold mb-3">
-              📊 Stock Tracking
-            </h4>
-            <p className="text-gray-600">
-              Monitor inventory levels in real time and get alerts for low stock.
-            </p>
+          <div className="feature-grid">
+            {features.map((feature) => (
+              <article className="feature-card" key={feature.title}>
+                <div className="feature-icon">{feature.icon}</div>
+                <h3>{feature.title}</h3>
+                <p>{feature.description}</p>
+              </article>
+            ))}
           </div>
+        </section>
 
-          <div className="bg-white shadow-md p-6 rounded-lg">
-            <h4 className="text-xl font-semibold mb-3">
-              🔒 Secure Access
-            </h4>
-            <p className="text-gray-600">
-              Secure login system with authentication to protect your data.
-            </p>
+        <section className="section-block" id="showcase">
+          <div className="showcase-grid">
+            <div className="showcase-card">
+              <span className="section-label">Daily workflow</span>
+              <h3>Scan the room in seconds.</h3>
+              <p>
+                Summary cards, searchable inventory, and chart insights live together so staff can move from signal to action quickly.
+              </p>
+
+              <div className="showcase-list">
+                {inventoryRows.map((row) => (
+                  <div className="showcase-item" key={row.name}>
+                    <div>
+                      <strong>{row.name}</strong>
+                      <p className="muted">{row.value}</p>
+                    </div>
+                    <span className={`category-pill ${row.status === "Low stock" ? "low" : ""}`}>
+                      {row.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="cta-card">
+              <div className="eyebrow">
+                <span className="eyebrow-dot" />
+                Ready to upgrade the interface
+              </div>
+              <h2>Bring a more premium feel to inventory management.</h2>
+              <p>
+                Sign up to start using the refreshed experience with cleaner data presentation, better form ergonomics,
+                and a more confident visual system.
+              </p>
+
+              <div className="inline-actions">
+                <button className="button button-primary" onClick={() => navigate("/register")} type="button">
+                  Create free account
+                </button>
+                <button className="button button-secondary" onClick={() => navigate("/login")} type="button">
+                  Sign in
+                </button>
+              </div>
+            </div>
           </div>
-
-        </div>
-
-      </section>
-
-
-      {/* Call To Action */}
-      <section className="bg-indigo-600 text-white text-center py-16">
-
-        <h3 className="text-3xl font-bold mb-4">
-          Start Managing Your Inventory Today
-        </h3>
-
-        <p className="mb-6">
-          Keep your business organized and efficient with our inventory system.
-        </p>
-
-        <button onClick={()=>{
-                navigate("/register")
-            }} className="bg-white text-indigo-600 font-semibold px-6 py-3 rounded-lg hover:bg-gray-200">
-          Register Now
-        </button>
-
-      </section>
-
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 text-center py-6">
-        <p>© 2026 InventoryPro. All rights reserved.</p>
-      </footer>
-
+        </section>
+      </main>
     </div>
   );
-};
+}
 
 export default Home;

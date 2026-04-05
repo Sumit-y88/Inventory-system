@@ -2,88 +2,138 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+const authHighlights = [
+  {
+    title: "Focused sign-in flow",
+    description: "High-contrast fields and cleaner layout reduce friction for daily use.",
+  },
+  {
+    title: "Safer access",
+    description: "JWT authentication keeps operational data protected behind a simple login flow.",
+  },
+  {
+    title: "Consistent product feel",
+    description: "The auth experience now matches the dashboard instead of feeling like a separate template.",
+  },
+];
+
 function Login() {
-
   const navigate = useNavigate();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const handleLogin = async (event) => {
+    event.preventDefault();
+    setError("");
+    setLoading(true);
 
     try {
-
-      const res = await axios.post(
-        "/api/auth/login",
-        { email, password }
-      );
-
-      localStorage.setItem("token", res.data.token);
-
+      const response = await axios.post("/api/auth/login", { email, password });
+      localStorage.setItem("token", response.data.token);
       navigate("/dashboard");
-
-    } catch (error) {
-      alert("Invalid credentials");
+    } catch {
+      setError("Incorrect email or password. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-indigo-500 to-purple-600">
+    <div className="page-shell auth-shell">
+      <div className="auth-layout">
+        <section className="auth-showcase surface-card">
+          <div className="brand">
+            <div className="brand-mark">I</div>
+            <div className="brand-copy">
+              <strong>InventoryPro</strong>
+              <span>Premium inventory operations</span>
+            </div>
+          </div>
 
-      <div className="bg-white p-8 rounded-xl shadow-lg w-96">
-
-        <h1 className="text-3xl font-bold text-center text-indigo-600 mb-2">
-          Inventory System
-        </h1>
-
-        <p className="text-center text-gray-500 mb-6">
-          Login to manage your inventory
-        </p>
-
-        <form onSubmit={handleLogin}>
-
-          <input
-            type="email"
-            placeholder="Email"
-            className="border p-3 w-full mb-4 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            onChange={(e) => setEmail(e.target.value)}
-          />
-
-          <input
-            type="password"
-            placeholder="Password"
-            className="border p-3 w-full mb-4 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            onChange={(e) => setPassword(e.target.value)}
-          />
-
-          <button
-            className="bg-indigo-600 text-white p-3 w-full rounded hover:bg-indigo-700 transition"
-          >
-            Login
-          </button>
-
-        </form>
-
-        {/* Register Section */}
-
-        <div className="text-center mt-6">
-
-          <p className="text-gray-600">
-            Don't have an account?
+          <div className="eyebrow" style={{ marginTop: "1.6rem" }}>
+            <span className="eyebrow-dot" />
+            Welcome back
+          </div>
+          <h2>Step back into your inventory command center.</h2>
+          <p className="muted">
+            Access stock visibility, analytics, and product workflows from a single polished workspace.
           </p>
 
-          <button
-            onClick={() => navigate("/register")}
-            className="mt-2 text-indigo-600 font-semibold hover:underline"
-          >
-            Create an Account
-          </button>
+          <div className="auth-feature-list">
+            {authHighlights.map((item) => (
+              <article className="auth-feature" key={item.title}>
+                <h3>{item.title}</h3>
+                <p>{item.description}</p>
+              </article>
+            ))}
+          </div>
+        </section>
 
-        </div>
+        <section className="auth-card">
+          <div className="brand">
+            <div className="brand-mark">I</div>
+            <div className="brand-copy">
+              <strong>Sign in</strong>
+              <span>Use your registered credentials</span>
+            </div>
+          </div>
 
+          <header>
+            <h1>Access your dashboard</h1>
+            <p>Enter your email and password to continue managing your inventory.</p>
+          </header>
+
+          {error && <div className="error-banner">{error}</div>}
+
+          <form className="form-grid" onSubmit={handleLogin}>
+            <div className="field-group">
+              <label htmlFor="email">Email address</label>
+              <input
+                className={`field ${error ? "error" : ""}`}
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  setError("");
+                }}
+                required
+              />
+            </div>
+
+            <div className="field-group">
+              <label htmlFor="password">Password</label>
+              <input
+                className={`field ${error ? "error" : ""}`}
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(event) => {
+                  setPassword(event.target.value);
+                  setError("");
+                }}
+                required
+              />
+            </div>
+
+            <button className="button button-primary" disabled={loading} type="submit">
+              {loading && <span className="spinner" />}
+              {loading ? "Signing in..." : "Sign in"}
+            </button>
+          </form>
+
+          <p className="form-footer">
+            Do not have an account?{" "}
+            <button className="link-button" onClick={() => navigate("/register")} type="button">
+              Create one
+            </button>
+          </p>
+        </section>
       </div>
-
     </div>
   );
 }

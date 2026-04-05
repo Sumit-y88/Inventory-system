@@ -37,7 +37,7 @@ console.log("Frontend Path:", frontendPath);
 
 app.use(express.static(frontendPath));
 
-app.get("/*splat", (req, res) => {
+app.get(/.*/, (req, res) => {
   res.sendFile(path.join(frontendPath, "index.html"));
 });
 
